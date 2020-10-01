@@ -1,9 +1,17 @@
 import { useState } from "react";
 
+export type getValueType = (option: {
+  value: any;
+  preValue: any;
+  targetValue: any;
+
+  dependsValue: any[];
+}) => any;
+
 export interface Config {
   [key: string]: {
     depend?: string[];
-    value: (value: any, dependValue: any[]) => any;
+    getValue: getValueType;
   };
 }
 
@@ -11,29 +19,67 @@ export interface InitState {
   [key: string]: any;
 }
 
-const useOptions = (options: Config, initState: InitState) => {
-  const [preValue, setPreValue] = useState(initState);
+export interface ValueType {
+  [key: string]: any;
+}
+
+const useOptions: (
+  options: Config,
+  initState: InitState
+) => [ValueType, (value: any) => void] = (options, initState) => {
+  const [{ values, targetValues, preValues }, setValue] = useState({
+    values: initState,
+    targetValues: initState,
+    preValues: initState,
+  });
 
   const cache = {};
-  const getValue = (key: string) => {
-    const { value: getValueFunc, depend = [] } = options[key];
-    const dependsValue = depend.map((dependKey) => {
+  const tryGetValues = new Set();
+
+  const getValueByDepends = (key: string) => {
+    if (tryGetValues.has(key)) {
+      throw new Error("Dependent reference cycle");
+    }
+    tryGetValues.add(key);
+
+    const { getValue, depend = [] } = options[key];
+    const dependsValues = depend.map((dependKey) => {
       if (cache[dependKey]) {
-        return cache[dependKey];
+        return cache[dependKey] || values[dependKey];
       }
-      return getValue(dependKey);
+      // 循环依赖获取初始值
+      if (tryGetValues.has(key)) {
+        return targetValues[dependKey] || values[dependKey];
+      }
+      return getValueByDepends(dependKey);
     });
-    const valueRes = getValueFunc(preValue[key], dependsValue);
+
+    const valueRes = getValue({
+      value: values[key],
+      preValue: preValues[key],
+      targetValue: targetValues[key],
+      dependsValue: dependsValues,
+    });
+
     cache[key] = valueRes;
+    tryGetValues.delete(key);
     return valueRes;
   };
 
-  const value = Object.keys(options).reduce(
-    (obj, key) => ({ ...obj, [key]: getValue(key) }),
+  const result = Object.keys(options).reduce(
+    (obj, key) => ({ ...obj, [key]: getValueByDepends(key) }),
     {}
   );
 
-  return [value, setPreValue];
+  const updateValue = (newTargetvalue: any) => {
+    setValue({
+      values: { ...result, ...newTargetvalue },
+      targetValues: newTargetvalue,
+      preValues: values,
+    });
+  };
+
+  return [result, updateValue];
 };
 
 export default useOptions;

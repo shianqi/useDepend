@@ -3,13 +3,13 @@ import useOptions, { Config } from "../src";
 
 const config: Config = {
   option1: {
-    value: (value) => value,
+    getValue: ({ value }) => value,
   },
   option2: {
     depend: ["value1"],
-    value: (value, depend) => {
-      console.log(depend);
-      const [value1] = depend;
+    getValue: ({ value, dependsValue }) => {
+      console.log(dependsValue);
+      const [value1] = dependsValue;
       if (value1 === "山西") {
         return ["大同", "太原"];
       }
@@ -18,8 +18,8 @@ const config: Config = {
   },
   value1: {
     depend: ["option1"],
-    value: (value, dependValue) => {
-      const [options1] = dependValue;
+    getValue: ({ value, dependsValue }) => {
+      const [options1] = dependsValue;
       if (!options1.includes(value)) {
         return options1[0];
       }
@@ -28,8 +28,8 @@ const config: Config = {
   },
   value2: {
     depend: ["option2"],
-    value: (value, dependValue) => {
-      const [options2] = dependValue;
+    getValue: ({ value, dependsValue }) => {
+      const [options2] = dependsValue;
       if (!options2.includes(value)) {
         return options2[0];
       }
@@ -44,18 +44,20 @@ const App: React.FC = () => {
     option2: ["大同", "太原"],
     value1: "山西",
     value2: "大同",
-  }) as any;
+  });
 
   console.log(option);
 
   const { value1, value2, option1, option2 } = option;
+
+  console.log("option", option);
 
   return (
     <div>
       <select
         value={value1}
         onChange={(e) => {
-          setOptions({ ...option, value1: e.target.value });
+          setOptions({ value1: e.target.value });
         }}
       >
         {option1.map((option) => (
@@ -65,7 +67,7 @@ const App: React.FC = () => {
       <select
         value={value2}
         onChange={(e) => {
-          setOptions({ ...option, value2: e.target.value });
+          setOptions({ value2: e.target.value });
         }}
       >
         {option2.map((option) => (
