@@ -4,7 +4,7 @@ import useDepend, { Config } from "../src";
 const config: Config = {
   a: {
     depend: ["b", "c"],
-    getValue: ({ value, preValue, targetValue, dependsValue: [b, c] }) => {
+    getValue: ({ value, preValue, targetValue, dependsValues: [b, c] }) => {
       console.log("value", value);
       console.log("preValue", preValue);
       return targetValue || c / b;
@@ -12,11 +12,11 @@ const config: Config = {
   },
   b: {
     depend: ["a", "c"],
-    getValue: ({ value, dependsValue: [a, c] }) => value || c / a,
+    getValue: ({ value, dependsValues: [a, c] }) => value || c / a,
   },
   c: {
     depend: ["a", "b"],
-    getValue: ({ value, dependsValue: [a, b] }) => value || a * b,
+    getValue: ({ value, dependsValues: [a, b] }) => value || a * b,
   },
 };
 

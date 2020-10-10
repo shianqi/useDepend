@@ -9,7 +9,7 @@ const config: Config = {
   },
   select2: {
     depend: ["select1"],
-    getValue: ({ value, dependsValue: [select1Value] }) => {
+    getValue: ({ value, dependsValues: [select1Value] }) => {
       return {
         ...value,
         show: select1Value.value,

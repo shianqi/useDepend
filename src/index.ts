@@ -1,12 +1,23 @@
 import { useState } from "react";
 
 export type getValueType = (option: {
+  /** 推测值 */
   value: any;
+  /** 前一次的值 */
   preValue: any;
+  /** 用户指定的新值 */
   targetValue: any;
-
-  dependsValue: any[];
+  /** 注入的依赖值 */
+  dependsValues: any[];
 }) => any;
+
+export interface DefaultStateType {
+  [key: string]: any;
+}
+
+export interface ValueType {
+  [key: string]: any;
+}
 
 export interface Config {
   [key: string]: {
@@ -15,17 +26,14 @@ export interface Config {
   };
 }
 
-export interface InitState {
-  [key: string]: any;
-}
-
-export interface ValueType {
-  [key: string]: any;
-}
-
-const useOptions: (
-  options: Config,
-  initState: InitState
+const useOptions: <StateType extends DefaultStateType = DefaultStateType>(
+  options: {
+    [key in keyof StateType]: {
+      depend?: string[];
+      getValue: getValueType;
+    };
+  },
+  initState: Partial<StateType>
 ) => [ValueType, (value: any) => void] = (options, initState) => {
   const [{ values, targetValues, preValues }, setValue] = useState({
     values: initState,
@@ -58,7 +66,7 @@ const useOptions: (
       value: values[key],
       preValue: preValues[key],
       targetValue: targetValues[key],
-      dependsValue: dependsValues,
+      dependsValues: dependsValues,
     });
 
     cache[key] = valueRes;

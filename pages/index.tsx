@@ -1,15 +1,15 @@
 import React from "react";
-import useOptions, { Config } from "../src";
+import useOptions from "../src";
 
-const config: Config = {
+const config = {
   option1: {
     getValue: ({ value }) => value,
   },
   option2: {
     depend: ["value1"],
-    getValue: ({ value, dependsValue }) => {
-      console.log(dependsValue);
-      const [value1] = dependsValue;
+    getValue: ({ value, dependsValues }) => {
+      console.log(dependsValues);
+      const [value1] = dependsValues;
       if (value1 === "山西") {
         return ["大同", "太原"];
       }
@@ -18,8 +18,11 @@ const config: Config = {
   },
   value1: {
     depend: ["option1"],
-    getValue: ({ value, dependsValue }) => {
-      const [options1] = dependsValue;
+    getValue: ({ value, dependsValues, preValue, targetValue }) => {
+      console.log("-----------");
+      console.log(value, dependsValues, preValue, targetValue);
+
+      const [options1] = dependsValues;
       if (!options1.includes(value)) {
         return options1[0];
       }
@@ -28,8 +31,8 @@ const config: Config = {
   },
   value2: {
     depend: ["option2"],
-    getValue: ({ value, dependsValue }) => {
-      const [options2] = dependsValue;
+    getValue: ({ value, dependsValues }) => {
+      const [options2] = dependsValues;
       if (!options2.includes(value)) {
         return options2[0];
       }
